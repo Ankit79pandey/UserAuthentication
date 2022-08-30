@@ -1,0 +1,259 @@
+Project Objective:As a developer, build Authentication Provider in Spring Security.
+
+************************************************************************
+Step 1:pom.xml
+---------------
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.7.3</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+	<groupId>com.simplilearn.security</groupId>
+	<artifactId>Spring-boot-security-learn</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>Spring-boot-security-learn</name>
+	<description>Demo project for Spring Boot</description>
+	<properties>
+		<java.version>11</java.version>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security </artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
+************************************************************************
+Step 2:com.simplilearn.security.SpringBootSecurityLearnApplication.java
+-----------------------------------------------------------------------
+package com.simplilearn.security;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class SpringBootSecurityLearnApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(SpringBootSecurityLearnApplication.class, args);
+	}
+
+}
+************************************************************************
+Step 3:com.simplilearn.security.config.MySecurityConfig.java
+-------------------------------------------------------------
+package com.simplilearn.security.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+@Configuration
+@EnableWebSecurity
+public class MySecurityConfig extends WebSecurityConfigurerAdapter{
+@Override
+protected void configure(HttpSecurity http) throws Exception {
+	// TODO Auto-generated method stub
+  http
+  .csrf().disable()
+  .authorizeRequests()
+  .antMatchers("/user/**").hasRole("Roles_User")
+  .antMatchers("/admin/**").hasRole("Admin")
+  .anyRequest()
+  .authenticated()
+  .and()
+  .httpBasic();
+}
+
+@Override
+	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+		auth.inMemoryAuthentication().withUser("user").password(this.passwordEncoder().encode("user")).roles("Role_User");
+		auth.inMemoryAuthentication().withUser("Admin").password(this.passwordEncoder().encode("Admin")).roles("Admin");
+	}
+
+@Bean
+public PasswordEncoder passwordEncoder() {
+	return new BCryptPasswordEncoder(10);
+}
+}
+************************************************************************
+Step 4: com.simplilearn.security.controllerHomeController.java
+----------------------------------------------------------------
+package com.simplilearn.security.Controller;
+
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/user")
+public class HomeController {
+
+	@GetMapping("/home")
+	public String home() {
+		return "This is user portal";
+	}
+
+	@GetMapping("/login")
+	public String login() {
+		return "This is login page";
+	}
+
+	@GetMapping("/register")
+	public String register() {
+		return "This is registration page";
+	}
+}
+************************************************************************
+Step 5: com.simplilearn.security.Controller.UserController
+----------------------------------------------------------
+package com.simplilearn.security.Controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.simplilearn.security.Models.User;
+import com.simplilearn.security.Services.UserService;
+
+@RestController
+@RequestMapping("/admin")
+public class UserController {
+
+	@Autowired
+	private UserService userService;
+	
+	
+	
+	
+	@GetMapping("/")
+	public List<User> getAllUsers(){
+		
+		return this.userService.getAllUser(); 
+	}
+	@GetMapping("/homepage")
+	public String Homepage() {
+		return "You are in adminPortal";
+	}
+	
+}
+
+************************************************************************
+Step 6:com.simplilearn.security.Models.User.java
+-------------------------------------------------
+package com.simplilearn.security.Models;
+
+
+
+public class User {
+
+
+	int id;
+	public int getId() {
+		return id;
+	}
+	public void setId(int id) {
+		this.id = id;
+	}
+	String username;
+	String password;
+	String role;
+
+	public String getUsername() {
+		return username;
+	}
+	public User(int id,String username, String password, String role) {
+		super();
+	
+		this.id=id;
+		this.username = username;
+		this.password = password;
+		this.role = role;
+	}
+	public void setUsername(String username) {
+		this.username = username;
+	}
+	public String getPassword() {
+		return password;
+	}
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	public String getRole() {
+		return role;
+	}
+	public void setRole(String role) {
+		this.role = role;
+	}
+}
+************************************************************************
+Step 7:com.simplilearn.security.Services.UserService.java
+-----------------------------------------------------------
+package com.simplilearn.security.Services;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
+
+import org.springframework.stereotype.Service;
+
+import com.simplilearn.security.Models.User;
+
+@Service
+public class UserService {
+
+	
+	List <User> list=new ArrayList<>();
+
+	public UserService() {
+		list.add(new User(1,"ankit","Ankit@1998","Admin"));
+		list.add(new User(2,"Vaibhav","Vibhav@1998","User"));
+	}
+	
+	public List<User> getAllUser(){
+	
+		return this.list;
+	}
+	
+	
+}
+************************************************************************
